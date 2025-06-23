@@ -19,7 +19,7 @@ body {
 
 .header {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
     color: white;
 }
 
@@ -53,7 +53,7 @@ body {
     display: flex;
     justify-content: center;
     gap: 10px;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 .tab-btn {
@@ -84,21 +84,35 @@ body {
     display: flex;
     justify-content: center;
     gap: 15px;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
 }
 
-.btn {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 25px;
+.controls .btn {
+    padding: 12px 28px;
     font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    min-width: 120px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-radius: 30px;
+    background-color: transparent;
+    color: rgba(255,255,255,0.8);
+    font-weight: 600;
+    box-shadow: none;
+    transition: all 0.3s;
+    justify-content: center;
+}
+
+.controls .btn.active,
+.controls .btn:active {
+    background-color: white !important;
+    color: #667eea !important;
+    border-color: white !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.controls .btn:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: white;
 }
 
 .btn-primary {
@@ -276,19 +290,83 @@ body {
     .header h1 {
         font-size: 2rem;
     }
-    
-    .leaderboard-table {
-        font-size: 0.9rem;
+    .header p, .event-period-header {
+        font-size: 1rem;
     }
-    
+    .container {
+        padding: 8px;
+    }
+    .tabs {
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 18px;
+    }
+    .tab-btn {
+        width: 100%;
+        padding: 10px 0;
+        font-size: 1rem;
+    }
+    .controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        margin-bottom: 18px;
+    }
+    .controls .btn {
+        width: 100%;
+        padding: 10px 0;
+        font-size: 1rem;
+    }
+    .stats {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+    .leaderboard-table {
+        font-size: 0.92rem;
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
     .leaderboard-table th,
     .leaderboard-table td {
         padding: 10px 8px;
     }
-    
-    .controls {
-        flex-direction: column;
-        align-items: center;
+    #chart-container {
+        padding: 12px 4px 12px 4px;
+        border-radius: 12px;
+        margin: 18px 0;
+        min-width: 320px;
+        overflow-x: auto;
+    }
+    #leaderboardChart {
+        min-width: 400px;
+        max-width: 100%;
+    }
+    .details-container {
+        padding: 10px 2px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header h1 {
+        font-size: 1.3rem;
+    }
+    .header p, .event-period-header {
+        font-size: 0.95rem;
+    }
+    .controls .btn {
+        font-size: 0.95rem;
+        padding: 8px 0;
+    }
+    .stat-card .number {
+        font-size: 1.2rem;
+    }
+    .stat-card {
+        padding: 10px;
+    }
+    #leaderboardChart {
+        min-width: 320px;
     }
 }
 
@@ -347,4 +425,55 @@ body {
 
 .details-table tr:last-child td {
     border-bottom: none;
+}
+
+#chart-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 10px 0 18px 0;
+    background: white;
+    border-radius: 18px;
+    margin: 18px 0;
+}
+
+#leaderboardChart {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    display: block;
+    margin: 0 auto;
+}
+
+@media (max-width: 600px) {
+    #chart-container {
+        padding: 6px 0 12px 0;
+        border-radius: 14px;
+    }
+    #leaderboardChart {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+}
+
+.center {
+    text-align: center !important;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.95em;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 1px;
+}
+.badge-success {
+    background: #27ae60;
+}
+.badge-danger {
+    background: #e74c3c;
 } 

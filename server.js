@@ -21,7 +21,7 @@ const STRAVA_REFRESH_TOKEN = process.env.STRAVA_REFRESH_TOKEN;
 const clubConfig = {
     woman: {
         id: process.env.STRAVA_CLUB_ID_WOMAN,
-        filter: ['Walk', 'Run', 'VirtualRun'],
+        filter: ['Walk'],
         name: 'TTD MOVE HL 2025 - WOMAN'
     },
     walk: {
@@ -31,7 +31,7 @@ const clubConfig = {
     },
     run: {
         id: process.env.STRAVA_CLUB_ID_RUN,
-        filter: ['Run', 'VirtualRun'],
+        filter: ['Run', 'TrailRun'],
         name: 'TTD MOVE HL 2025 - RUN'
     }
 };

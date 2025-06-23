@@ -1,4 +1,5 @@
 let currentData = null;
+let chartInstance = null;
 
 function formatDistance(meters) {
     const km = meters / 1000;
@@ -39,21 +40,30 @@ function updateStats(data) {
     const totalAthletes = data.leaderboard.length;
     const totalActivities = data.totalActivities;
     const totalDistance = data.leaderboard.reduce((sum, athlete) => sum + athlete.totalDistanceKm, 0);
+    const totalFinisher = data.leaderboard.filter(athlete => athlete.totalDistanceKm >= 30).length;
 
     document.getElementById('totalAthletes').textContent = totalAthletes;
     document.getElementById('totalActivities').textContent = totalActivities;
     document.getElementById('totalDistance').textContent = totalDistance.toFixed(1);
+    document.getElementById('totalFinisher').textContent = totalFinisher;
 }
 
 function showStats() {
     const statsDiv = document.getElementById('stats');
+    const chartContainer = document.getElementById('chart-container');
+    const btnStats = document.querySelector('.btn.btn-secondary[onclick="showStats()"]');
+    const btnChart = document.querySelector('.btn.btn-secondary[onclick="showChart()"]');
     if (statsDiv.style.display === 'none') {
         statsDiv.style.display = 'grid';
+        chartContainer.style.display = 'none';
+        btnStats.classList.add('active');
+        btnChart.classList.remove('active');
         if (currentData) {
             updateStats(currentData);
         }
     } else {
         statsDiv.style.display = 'none';
+        btnStats.classList.remove('active');
     }
 }
 
@@ -86,10 +96,11 @@ function displayLeaderboard(data) {
         row.innerHTML = `
             <td class="rank ${rankClass}">${rank}</td>
             <td class="athlete-name">${athlete.name} <i class="fas fa-chevron-down activity-toggle-icon"></i></td>
-            <td class="distance">${athlete.totalDistanceKm.toFixed(2)} km</td>
-            <td class="time">${formatTime(athlete.totalTime)}</td>
-            <td class="pace">${formatPace(athlete.averagePace)}</td>
-            <td class="activities">${athlete.activities}</td>
+            <td class="distance center">${athlete.totalDistanceKm.toFixed(2)} km</td>
+            <td class="time center">${formatTime(athlete.totalTime)}</td>
+            <td class="pace center">${formatPace(athlete.averagePace)}</td>
+            <td class="activities center">${athlete.activities}</td>
+            <td class="center">${athlete.totalDistanceKm >= 30 ? '<span class=\'badge badge-success\'>YES</span>' : '<span class=\'badge badge-danger\'>NO</span>'}</td>
         `;
         tbody.appendChild(row);
 
@@ -173,6 +184,67 @@ async function loadLeaderboard(clubType) {
     }
     
     hideLoading();
+}
+
+function showChart() {
+    const chartContainer = document.getElementById('chart-container');
+    const statsDiv = document.getElementById('stats');
+    const btnStats = document.querySelector('.btn.btn-secondary[onclick="showStats()"]');
+    const btnChart = document.querySelector('.btn.btn-secondary[onclick="showChart()"]');
+    if (chartContainer.style.display === 'none') {
+        chartContainer.style.display = 'block';
+        statsDiv.style.display = 'none';
+        btnChart.classList.add('active');
+        btnStats.classList.remove('active');
+        renderLeaderboardChart();
+    } else {
+        chartContainer.style.display = 'none';
+        btnChart.classList.remove('active');
+    }
+}
+
+function renderLeaderboardChart() {
+    const ctx = document.getElementById('leaderboardChart').getContext('2d');
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+    if (!currentData || !currentData.leaderboard) return;
+    const labels = currentData.leaderboard.map(a => a.name);
+    const data = currentData.leaderboard.map(a => a.totalDistanceKm);
+    chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Total Jarak (km)',
+                data: data,
+                backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                borderColor: 'rgba(102, 126, 234, 1)',
+                borderWidth: 2,
+                borderRadius: 8,
+                maxBarThickness: 40
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                title: { display: false }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#2c3e50', font: { weight: 'bold' } },
+                    grid: { color: '#f0f0f0' }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Jarak (km)' },
+                    ticks: { color: '#2c3e50' },
+                    grid: { color: '#f0f0f0' }
+                }
+            }
+        }
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function() {

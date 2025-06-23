@@ -7,6 +7,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -25,6 +26,9 @@
             <button class="btn btn-secondary" onclick="showStats()">
                 <i class="fas fa-chart-bar"></i> Statistik
             </button>
+            <button class="btn btn-secondary" onclick="showChart()">
+                <i class="fas fa-chart-line"></i> Grafik
+            </button>
         </div>
 
         <div id="stats" class="stats" style="display: none;">
@@ -39,6 +43,10 @@
             <div class="stat-card">
                 <div class="number" id="totalDistance">-</div>
                 <div class="label">Total Jarak (km)</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="totalFinisher">-</div>
+                <div class="label">Total Finisher</div>
             </div>
         </div>
 
@@ -59,15 +67,20 @@
                     <tr>
                         <th class="rank">Rank</th>
                         <th>Athlete</th>
-                        <th>Total Jarak</th>
-                        <th>Total Waktu</th>
-                        <th>Pace Rata-rata</th>
-                        <th>Aktivitas</th>
+                        <th class="center">Total Jarak</th>
+                        <th class="center">Total Waktu</th>
+                        <th class="center">Pace Rata-rata</th>
+                        <th class="center">Aktivitas</th>
+                        <th class="center">Finisher</th>
                     </tr>
                 </thead>
                 <tbody id="leaderboardBody">
                 </tbody>
             </table>
+        </div>
+
+        <div id="chart-container" style="display:none; margin: 40px 0;">
+            <canvas id="leaderboardChart" height="120"></canvas>
         </div>
 
         <div class="last-updated" id="lastUpdated"></div>
