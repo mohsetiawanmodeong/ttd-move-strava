@@ -29,6 +29,9 @@
             <button class="btn btn-secondary" onclick="showChart()">
                 <i class="fas fa-chart-line"></i> Grafik
             </button>
+            <button class="btn btn-podium" onclick="showPodium()">
+                <i class="fas fa-medal"></i> Podium
+            </button>
         </div>
 
         <div id="stats" class="stats" style="display: none;">
@@ -56,6 +59,11 @@
         </div>
 
         <div id="error" class="error" style="display: none;"></div>
+
+        <div id="podiumSection" class="podium-section" style="display:none;"></div>
+        <div id="chart-container" style="display:none; margin: 20px 0;">
+            <canvas id="leaderboardChart" height="120"></canvas>
+        </div>
 
         <div id="leaderboard" class="leaderboard" style="display: none;">
             <div class="leaderboard-header">
@@ -85,6 +93,16 @@
 
         <div class="last-updated" id="lastUpdated"></div>
     </div>
+
+    <div id="activityModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" id="closeModal">&times;</span>
+            <div id="modalBody">
+                <!-- Activity details will be rendered here -->
+            </div>
+        </div>
+    </div>
+    <div id="modalOverlay" class="modal-overlay" style="display:none;"></div>
 
     <script src="js/script.js" defer></script>
 </body>

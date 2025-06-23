@@ -127,9 +127,11 @@ function calculateLeaderboard(activities) {
         leaderboard[athleteKey].totalTime += movingTime;
         leaderboard[athleteKey].activities += 1;
         leaderboard[athleteKey].activityList.push({
+            id: activity.id,
             name: activity.name,
             distance: activity.distance,
-            moving_time: activity.moving_time
+            moving_time: activity.moving_time,
+            start_date: activity.start_date
         });
     });
     
@@ -183,6 +185,20 @@ app.get('/api/leaderboard/:clubType', async (req, res) => {
             success: false,
             error: error.message
         });
+    }
+});
+
+// API endpoint to get activity details from Strava
+app.get('/api/activity/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const token = await getValidAccessToken();
+        const response = await axios.get(`https://www.strava.com/api/v3/activities/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        res.json({ success: true, data: response.data });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
