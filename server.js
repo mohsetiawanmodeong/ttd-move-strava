@@ -5,7 +5,7 @@ const moment = require('moment');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
@@ -16,7 +16,25 @@ app.use(express.static('public'));
 const STRAVA_CLIENT_ID = process.env.STRAVA_CLIENT_ID;
 const STRAVA_CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET;
 const STRAVA_REFRESH_TOKEN = process.env.STRAVA_REFRESH_TOKEN;
-const STRAVA_CLUB_ID = process.env.STRAVA_CLUB_ID;
+
+// Club Configuration Mapping
+const clubConfig = {
+    woman: {
+        id: process.env.STRAVA_CLUB_ID_WOMAN,
+        filter: ['Walk', 'Run', 'VirtualRun'],
+        name: 'TTD MOVE HL 2025 - WOMAN'
+    },
+    walk: {
+        id: process.env.STRAVA_CLUB_ID_WALK,
+        filter: ['Walk'],
+        name: 'TTD MOVE HL 2025 - WALK'
+    },
+    run: {
+        id: process.env.STRAVA_CLUB_ID_RUN,
+        filter: ['Run', 'VirtualRun'],
+        name: 'TTD MOVE HL 2025 - RUN'
+    }
+};
 
 // Event period configuration
 const EVENT_START_DATE = '2025-06-07';
@@ -54,11 +72,11 @@ async function getValidAccessToken() {
     return accessToken;
 }
 
-// Function to get club activities
-async function getClubActivities() {
+// Function to get club activities for a specific club
+async function getClubActivities(clubId) {
     try {
         const token = await getValidAccessToken();
-        const response = await axios.get(`https://www.strava.com/api/v3/clubs/${STRAVA_CLUB_ID}/activities`, {
+        const response = await axios.get(`https://www.strava.com/api/v3/clubs/${clubId}/activities`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             },
@@ -66,24 +84,21 @@ async function getClubActivities() {
                 per_page: 200
             }
         });
-
         return response.data;
     } catch (error) {
-        console.error('Error fetching club activities:', error.message);
+        console.error(`Error fetching activities for club ${clubId}:`, error.message);
         throw error;
     }
 }
 
-// Function to filter virtual run activities
-function filterVirtualRunActivities(activities) {
+// Function to filter activities by allowed types
+function filterActivitiesBySportType(activities, allowedTypes) {
     return activities.filter(activity => {
         const activityDate = moment(activity.start_date).format('YYYY-MM-DD');
         const isInEventPeriod = activityDate >= EVENT_START_DATE && activityDate <= EVENT_END_DATE;
+        const isAllowedType = allowedTypes.includes(activity.sport_type);
         
-        // Filter for running and walking activities.
-        const isRunOrWalk = activity.sport_type === 'Run' || activity.sport_type === 'VirtualRun' || activity.sport_type === 'Walk';
-        
-        return isInEventPeriod && isRunOrWalk;
+        return isInEventPeriod && isAllowedType;
     });
 }
 
@@ -93,10 +108,9 @@ function calculateLeaderboard(activities) {
     
     activities.forEach(activity => {
         const athleteName = activity.athlete.firstname + ' ' + activity.athlete.lastname;
-        // Use the athlete's full name as a key since the API doesn't provide a stable ID here.
         const athleteKey = athleteName;
-        const distance = activity.distance; // in meters
-        const movingTime = activity.moving_time; // in seconds
+        const distance = activity.distance;
+        const movingTime = activity.moving_time;
         
         if (!leaderboard[athleteKey]) {
             leaderboard[athleteKey] = {
@@ -104,55 +118,67 @@ function calculateLeaderboard(activities) {
                 totalDistance: 0,
                 totalTime: 0,
                 activities: 0,
-                averagePace: 0
+                averagePace: 0,
+                activityList: []
             };
         }
         
         leaderboard[athleteKey].totalDistance += distance;
         leaderboard[athleteKey].totalTime += movingTime;
         leaderboard[athleteKey].activities += 1;
+        leaderboard[athleteKey].activityList.push({
+            name: activity.name,
+            distance: activity.distance,
+            moving_time: activity.moving_time
+        });
     });
     
-    // Calculate average pace and convert to sorted array
     const leaderboardArray = Object.values(leaderboard).map(athlete => {
         const totalDistanceKm = athlete.totalDistance / 1000;
         const totalTimeHours = athlete.totalTime / 3600;
-        athlete.averagePace = totalTimeHours / totalDistanceKm; // hours per km
+        athlete.averagePace = totalDistanceKm > 0 ? totalTimeHours / totalDistanceKm : 0;
         athlete.totalDistanceKm = totalDistanceKm;
         athlete.totalTimeHours = totalTimeHours;
         return athlete;
     });
     
-    // Sort by total distance (descending)
     return leaderboardArray.sort((a, b) => b.totalDistance - a.totalDistance);
 }
 
-// API endpoint to get leaderboard
-app.get('/api/leaderboard', async (req, res) => {
+// API endpoint to get leaderboard for a specific club type
+app.get('/api/leaderboard/:clubType', async (req, res) => {
+    const { clubType } = req.params;
+    const config = clubConfig[clubType];
+
+    if (!config) {
+        return res.status(404).json({ success: false, error: 'Invalid club type specified.' });
+    }
+
     try {
-        console.log('Fetching club activities...');
-        const activities = await getClubActivities();
+        console.log(`Fetching activities for ${config.name}...`);
+        const activities = await getClubActivities(config.id);
         
-        console.log(`Found ${activities.length} total activities`);
-        const virtualRunActivities = filterVirtualRunActivities(activities);
+        console.log(`Found ${activities.length} total activities for ${clubType}.`);
+        const filteredActivities = filterActivitiesBySportType(activities, config.filter);
         
-        console.log(`Found ${virtualRunActivities.length} virtual run activities in event period`);
-        const leaderboard = calculateLeaderboard(virtualRunActivities);
+        console.log(`Found ${filteredActivities.length} valid activities for ${clubType}.`);
+        const leaderboard = calculateLeaderboard(filteredActivities);
         
         res.json({
             success: true,
             data: {
                 leaderboard,
+                clubName: config.name,
                 eventPeriod: {
                     start: EVENT_START_DATE,
                     end: EVENT_END_DATE
                 },
-                totalActivities: virtualRunActivities.length,
+                totalActivities: filteredActivities.length,
                 lastUpdated: new Date().toISOString()
             }
         });
     } catch (error) {
-        console.error('Error in leaderboard endpoint:', error);
+        console.error(`Error in leaderboard endpoint for ${clubType}:`, error);
         res.status(500).json({
             success: false,
             error: error.message
@@ -180,5 +206,5 @@ app.get('/api/health', (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📅 Event period: ${EVENT_START_DATE} to ${EVENT_END_DATE}`);
-    console.log(`🏃‍♂️ Virtual Run Leaderboard ready!`);
+    console.log(`🏃‍♂️ Multi-Club Leaderboard ready!`);
 }); 
